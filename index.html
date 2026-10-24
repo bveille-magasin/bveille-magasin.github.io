@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>B·Veille</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="B·Veille">
+<meta name="theme-color" content="#F76B00">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="demo.css">
+<style>
+  [hidden] { display: none !important; }
+  /* Assistant de premier lancement (iPhone) */
+  #setup { position: fixed; inset: 0; overflow-y: auto; background: #EAEAF7; color: #1B1D29; z-index: 10;
+    font-family: Poppins, -apple-system, system-ui, sans-serif; -webkit-user-select: none; user-select: none; }
+  #setup main { max-width: 460px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px;
+    padding: calc(28px + env(safe-area-inset-top, 0px)) max(18px, env(safe-area-inset-right, 0px)) calc(32px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px)); }
+  #setup .kicker { font-size: 13px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #4A4D5C; }
+  #setup h1 { margin: 2px 0 0; font-family: "Work Sans", Poppins, sans-serif; font-weight: 800; font-size: 26px; line-height: 1.2; }
+  #setup p { margin: 0; font-size: 14px; line-height: 1.45; color: #3F4250; }
+  .card { background: #fff; border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .card h2 { margin: 0; font-size: 15px; font-weight: 600; }
+  .models { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .models label, .caps label { position: relative; display: flex; align-items: center; justify-content: center; text-align: center;
+    min-height: 48px; padding: 6px 10px; border-radius: 12px; border: 2px solid #DCDBEF; font-size: 14px; font-weight: 600; background: #fff; }
+  .models input, .caps input { position: absolute; opacity: 0; pointer-events: none; }
+  .models label:has(input:checked), .caps label:has(input:checked) { border-color: #F56A00; background: #FFF1E6; color: #8A3B00; }
+  .models label:has(input:focus-visible), .caps label:has(input:focus-visible) { outline: 2px solid #1B1D29; outline-offset: 2px; }
+  .caps { display: flex; flex-wrap: wrap; gap: 8px; }
+  .caps label { flex: 1 1 90px; }
+  .toggle { flex-direction: row; align-items: center; }
+  .toggle .txt { flex: 1; min-width: 0; }
+  .toggle small { display: block; font-size: 12px; color: #4A4D5C; line-height: 1.35; margin-top: 2px; }
+  .toggle input { width: 26px; height: 26px; accent-color: #F56A00; flex-shrink: 0; }
+  .warn { background: #FFF1E6; border: 1px solid #F8C9A3; border-radius: 14px; padding: 12px 14px; font-size: 13px; line-height: 1.45; }
+  .warn b { color: #8A3B00; }
+  .go { min-height: 56px; border: none; border-radius: 28px; background: #F56A00; color: #fff; font: 700 19px "Work Sans", Poppins, sans-serif; }
+  .go:disabled { background: #C9C7D6; color: #3A3D46; }
+  .go:focus-visible { outline: 3px solid #1B1D29; outline-offset: 2px; }
+  .ver { text-align: center; font-size: 12px; color: #4A4D5C; }
+  /* Accès caché aux réglages : appui long dans le coin supérieur gauche */
+  #corner { position: fixed; left: 0; top: 0; width: 90px; height: 90px; z-index: 8; }
+  #admin { position: fixed; inset: 0; z-index: 12; background: rgba(27,29,41,.55); display: flex; align-items: center; justify-content: center; padding: 24px; }
+  #admin .box2 { background: #fff; border-radius: 18px; padding: 20px; max-width: 320px; display: flex; flex-direction: column; gap: 12px;
+    font-family: Poppins, -apple-system, system-ui, sans-serif; color: #1B1D29; text-align: center; }
+  #admin button { min-height: 48px; border-radius: 24px; border: none; font: 600 15px Poppins, -apple-system, sans-serif; }
+  #admin .alt { background: #EAEAF7; color: #1B1D29; }
+</style>
+</head>
+<body>
+
+<div id="setup" hidden>
+  <main>
+    <img src="logos/boulanger-signature.svg" alt="Boulanger" style="height:46px;align-self:flex-start">
+    <div>
+      <div class="kicker">Installation de la démo iPhone</div>
+      <h1>Quel iPhone est exposé ?</h1>
+      <p>Choisissez le modèle et la capacité indiqués sur l'étiquette. Les caractéristiques affichées viennent des fiches officielles Apple.</p>
+    </div>
+
+    <div class="warn" id="notInstalled" hidden>
+      <b>Ajoutez d'abord B·Veille à l'écran d'accueil.</b> Dans Safari : bouton Partager, puis « Sur l'écran d'accueil ». Ouvrez ensuite B·Veille depuis son icône et faites ce réglage à ce moment-là : un réglage fait dans Safari n'est pas repris par l'icône.
+    </div>
+
+    <section class="card">
+      <h2>Modèle</h2>
+      <div class="models" id="models"></div>
+    </section>
+
+    <section class="card">
+      <h2>Capacité</h2>
+      <div class="caps" id="caps"><p>Choisissez d'abord le modèle.</p></div>
+    </section>
+
+    <label class="card toggle" for="inf">
+      <span class="txt"><b style="font-size:15px">Écran Club Infinity</b>
+        <small>Activé par défaut. Précise que les avantages AppleCare ne sont pas inclus pour les reconditionnés.</small></span>
+      <input type="checkbox" id="inf">
+    </label>
+
+    <button class="go" id="go" type="button" disabled>Lancer la démo</button>
+    <p class="ver">B·Veille iPhone · version 1.0<br>Pour revenir à cet écran : appui long de 3 secondes dans le coin supérieur gauche de l'animation.</p>
+  </main>
+</div>
+
+<div id="stage"></div>
+<div id="corner" hidden></div>
+<div id="admin" hidden>
+  <div class="box2">
+    <b>Réglages de la démo</b>
+    <span style="font-size:14px;color:#3F4250">Changer le modèle, la capacité ou l'écran Club Infinity de cet iPhone.</span>
+    <button class="go" type="button" id="toSetup">Modifier les réglages</button>
+    <button class="alt" type="button" id="cancelAdmin">Revenir à l'animation</button>
+  </div>
+</div>
+
+<script>
+/* Caractéristiques officielles Apple (fiches techniques support.apple.com). Uniquement des valeurs publiées par Apple. */
+var MODELS = {
+  'iphone-12': {
+    name: 'iPhone 12', caps: [64, 128, 256],
+    cpuName: 'Puce A14 Bionic', cores: 6,
+    screenInch: 6.1, resW: 1170, resH: 2532, hz: 60, screenTech: 'OLED Super Retina XDR',
+    screenSub: 'Des couleurs éclatantes et des noirs profonds.',
+    cameraMp: 12
+  },
+  'iphone-13': {
+    name: 'iPhone 13', caps: [128, 256, 512],
+    cpuName: 'Puce A15 Bionic', cores: 6,
+    screenInch: 6.1, resW: 1170, resH: 2532, hz: 60, screenTech: 'OLED Super Retina XDR',
+    screenSub: 'Des couleurs éclatantes et des noirs profonds.',
+    cameraMp: 12
+  },
+  'iphone-13-mini': {
+    name: 'iPhone 13 mini', caps: [128, 256, 512],
+    cpuName: 'Puce A15 Bionic', cores: 6,
+    screenInch: 5.4, resW: 1080, resH: 2340, hz: 60, screenTech: 'OLED Super Retina XDR',
+    screenTitle: 'Compact, il tient dans la main', screenSub: 'Un écran OLED dans un format de poche.',
+    cameraMp: 12
+  },
+  'iphone-16-pro-max': {
+    name: 'iPhone 16 Pro Max', caps: [256, 512, 1024],
+    cpuName: 'Puce A18 Pro', cores: 6, cpuSub: 'La puce la plus récente de cette sélection.',
+    screenInch: 6.9, resW: 1320, resH: 2868, hz: 120, screenTech: 'ProMotion',
+    cameraMp: 48, photoPill: 'Zoom optique 5x'
+  }
+};
+
+(function () {
+  'use strict';
+  var KEY = 'bveille-config';
+  function load() { try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { return null; } }
+  function save(c) { try { localStorage.setItem(KEY, JSON.stringify(c)); } catch (e) {} }
+  function capLabel(gb) { return gb >= 1024 ? (gb / 1024) + ' To' : gb + ' Go'; }
+
+  var standalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+  var cfg = load();
+  var setup = document.getElementById('setup');
+
+  // ---------- Assistant ----------
+  function showSetup() {
+    setup.hidden = false;
+    document.getElementById('notInstalled').hidden = standalone;
+    var mBox = document.getElementById('models'), cBox = document.getElementById('caps'), go = document.getElementById('go');
+    var chosen = { model: cfg && cfg.model, cap: cfg && cfg.cap, infinity: cfg ? !!cfg.infinity : true };
+    document.getElementById('inf').checked = chosen.infinity;
+
+    function renderCaps() {
+      cBox.innerHTML = '';
+      var m = MODELS[chosen.model];
+      if (!m) { cBox.innerHTML = '<p>Choisissez d’abord le modèle.</p>'; return; }
+      if (m.caps.indexOf(chosen.cap) < 0) chosen.cap = null;
+      m.caps.forEach(function (gb) {
+        var l = document.createElement('label'), i = document.createElement('input');
+        i.type = 'radio'; i.name = 'cap'; i.id = 'cap-' + gb; i.value = gb; i.checked = chosen.cap === gb;
+        i.addEventListener('change', function () { chosen.cap = gb; update(); });
+        l.appendChild(i); l.appendChild(document.createTextNode(capLabel(gb)));
+        cBox.appendChild(l);
+      });
+    }
+    function update() { go.disabled = !(MODELS[chosen.model] && chosen.cap); }
+
+    mBox.innerHTML = '';
+    Object.keys(MODELS).forEach(function (k) {
+      var l = document.createElement('label'), i = document.createElement('input');
+      i.type = 'radio'; i.name = 'model'; i.id = 'model-' + k; i.value = k; i.checked = chosen.model === k;
+      i.addEventListener('change', function () { chosen.model = k; renderCaps(); update(); });
+      l.appendChild(i); l.appendChild(document.createTextNode(MODELS[k].name));
+      mBox.appendChild(l);
+    });
+    renderCaps(); update();
+
+    document.getElementById('inf').onchange = function (e) { chosen.infinity = e.target.checked; };
+    go.onclick = function () {
+      save({ model: chosen.model, cap: chosen.cap, infinity: chosen.infinity });
+      location.reload();
+    };
+  }
+
+  // ---------- Démo ----------
+  function startDemo() {
+    var m = MODELS[cfg.model];
+    var specs = {
+      platform: 'ios', name: m.name, cpuName: m.cpuName, cpuSub: m.cpuSub, cores: m.cores, maxGhz: 0,
+      ramGb: 0, storageGb: cfg.cap, sdMaxTb: 0, screenInch: m.screenInch, resW: m.resW, resH: m.resH, hz: m.hz,
+      screenTech: m.screenTech, screenTitle: m.screenTitle, screenSub: m.screenSub,
+      cameraMp: m.cameraMp, photoPill: m.photoPill, batteryMah: 0, infinity: !!cfg.infinity
+    };
+    window.Demo = { specs: function () { return JSON.stringify(specs); } };
+
+    ['legal.js', 'demo.js'].reduce(function (p, src) {
+      return p.then(function () {
+        return new Promise(function (ok, ko) {
+          var s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = ko; document.body.appendChild(s);
+        });
+      });
+    }, Promise.resolve());
+
+    // Écran toujours allumé quand c'est possible (en plus du verrouillage automatique sur « Jamais »).
+    function wake() { try { if (navigator.wakeLock) navigator.wakeLock.request('screen').catch(function () {}); } catch (e) {} }
+    wake();
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) wake(); });
+
+    // Appui long de 3 s dans le coin supérieur gauche : accès aux réglages.
+    var corner = document.getElementById('corner'), admin = document.getElementById('admin'), t;
+    corner.hidden = false;
+    corner.addEventListener('pointerdown', function (e) { e.stopPropagation(); t = setTimeout(function () { admin.hidden = false; }, 3000); });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) { corner.addEventListener(ev, function () { clearTimeout(t); }); });
+    document.getElementById('toSetup').onclick = function () { admin.hidden = true; document.getElementById('stage').innerHTML = ''; location.hash = ''; showSetupFromDemo(); };
+    document.getElementById('cancelAdmin').onclick = function () { admin.hidden = true; };
+  }
+  function showSetupFromDemo() { try { localStorage.setItem(KEY + '-edit', '1'); } catch (e) {} location.reload(); }
+
+  var editing = false;
+  try { editing = localStorage.getItem(KEY + '-edit') === '1'; localStorage.removeItem(KEY + '-edit'); } catch (e) {}
+
+  if (cfg && MODELS[cfg.model] && cfg.cap && !editing) startDemo(); else showSetup();
+
+  // Fonctionnement hors connexion une fois la page chargée.
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  }
+})();
+</script>
+</body>
+</html>
