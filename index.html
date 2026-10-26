@@ -83,7 +83,7 @@
     </label>
 
     <button class="go" id="go" type="button" disabled>Lancer la démo</button>
-    <p class="ver">B·Veille iPhone · version 1.1<br>Pour revenir à cet écran : appui long de 3 secondes dans le coin supérieur gauche de l'animation.</p>
+    <p class="ver">B·Veille iPhone · version 1.3<br>Pour revenir à cet écran : appui long de 3 secondes dans le coin supérieur gauche de l'animation.</p>
   </main>
 </div>
 
@@ -181,6 +181,44 @@ var MODELS = {
     };
   }
 
+  // ---------- Heure commune ----------
+  // Contrôle 1 : l'heure du serveur de la page (en-tête « Date », précis à la seconde),
+  // affinée en repérant le changement de seconde sur plusieurs requêtes rapprochées.
+  // Contrôle 2 : l'horloge de l'iPhone, réglée automatiquement par Apple (utilisée si le contrôle 1 échoue).
+  var OFFSET_KEY = 'bveille-clock-offset';
+  var clockOffset = 0;
+  try { clockOffset = Number(localStorage.getItem(OFFSET_KEY)) || 0; } catch (e) {}
+
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  async function measureClock() {
+    try {
+      var prev = null;
+      for (var i = 0; i < 30; i++) {
+        var t1 = Date.now();
+        var res = await fetch('./manifest.webmanifest?clock=' + t1, { method: 'HEAD', cache: 'no-store' });
+        var t2 = Date.now();
+        var d = Date.parse(res.headers.get('Date') || '');
+        if (!isFinite(d) || t2 - t1 > 1500) { prev = null; await sleep(150); continue; }
+        if (prev && d > prev.s) {
+          // La seconde du serveur a changé entre les deux réponses : on situe ce moment au milieu.
+          var local = (prev.mid + (t1 + t2) / 2) / 2;
+          var off = d - local;
+          if (Math.abs(off) < 12 * 3600 * 1000) {
+            clockOffset = Math.round(off);
+            try { localStorage.setItem(OFFSET_KEY, String(clockOffset)); } catch (e) {}
+          }
+          return;
+        }
+        prev = { s: d, mid: (t1 + t2) / 2 };
+        await sleep(80);
+      }
+    } catch (e) {
+      // Pas de réseau : on garde la dernière mesure, sinon l'horloge de l'iPhone.
+    }
+  }
+  // Nouvelle mesure toutes les 6 heures (l'animation tourne en continu).
+  setInterval(function () { if (cfg) measureClock(); }, 6 * 3600 * 1000);
+
   // ---------- Démo ----------
   function startDemo() {
     var m = MODELS[cfg.model];
@@ -190,7 +228,8 @@ var MODELS = {
       screenTech: m.screenTech, screenTitle: m.screenTitle, screenSub: m.screenSub,
       cameraMp: m.cameraMp, photoPill: m.photoPill, batteryMah: 0, infinity: !!cfg.infinity
     };
-    window.Demo = { specs: function () { return JSON.stringify(specs); } };
+    window.Demo = { specs: function () { return JSON.stringify(specs); }, clockOffset: function () { return clockOffset; } };
+    measureClock();
 
     ['legal.js', 'demo.js'].reduce(function (p, src) {
       return p.then(function () {

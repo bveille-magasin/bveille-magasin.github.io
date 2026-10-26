@@ -1,6 +1,6 @@
 /* B·Veille iPhone : garde une copie de la page pour fonctionner même si le Wi-Fi coupe.
    Changer VERSION à chaque mise à jour pour que les iPhone récupèrent la nouvelle version. */
-var VERSION = 'bveille-ios-1.1';
+var VERSION = 'bveille-ios-1.3';
 var FILES = [
   './',
   './boulanger-intro.gif',
@@ -36,6 +36,10 @@ self.addEventListener('activate', function (e) {
 // Réseau d'abord (pour recevoir les mises à jour), copie locale si le Wi-Fi ne répond pas.
 self.addEventListener('fetch', function (e) {
   if (e.request.method !== 'GET') return;
+  // Vidéo : laissée au navigateur (Safari exige des réponses partielles). Hors ligne, la page repasse au GIF.
+  if (new URL(e.request.url).pathname.endsWith('.mp4')) return;
+  // Mesure de l'heure : toujours directement au serveur.
+  if (new URL(e.request.url).searchParams.has('clock')) return;
   e.respondWith(
     fetch(e.request).then(function (res) {
       if (res && res.ok && new URL(e.request.url).origin === location.origin) {

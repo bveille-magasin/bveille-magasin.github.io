@@ -38,8 +38,8 @@
   // ---------- Écrans ----------
   var screens = {
     intro: function () {
-      // Paramètre unique : force l'animation à repartir de la première image à chaque passage.
-      return '<div class="screen intro"><img src="boulanger-intro.gif?r=' + Date.now() + '" alt="Boulanger"></div>';
+      // Vidéo plutôt que GIF : elle peut être recalée à l'image près sur l'horloge commune.
+      return '<div class="screen intro"><video src="intro.mp4" muted playsinline autoplay preload="auto" aria-label="Boulanger"></video></div>';
     },
 
     home: function () {
@@ -243,11 +243,26 @@
     return { name: specs.infinity ? 'infinity' : 'home', key: start + ':fin', from: a, to: a + INF_MS };
   }
 
+  function now() {
+    var o = 0;
+    try { if (window.Demo && window.Demo.clockOffset) o = Number(window.Demo.clockOffset()) || 0; } catch (e) {}
+    return Date.now() + o;
+  }
+
+  // Cale la vidéo du logo sur l'horloge commune (au chargement, puis à chaque seconde).
+  var introVideo = null, introFrom = 0;
+  function syncIntro() {
+    var v = introVideo;
+    if (!v || !(v.readyState >= 1)) return;
+    var target = Math.max(0, (now() - introFrom) / 1000);
+    if (isFinite(v.duration) && target >= v.duration) return;
+    if (Math.abs(v.currentTime - target) > 0.12) { try { v.currentTime = target; } catch (e) {} }
+    if (v.paused) { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); }
+  }
+
   var current = null, currentName = null, count = 0;
   function show(slot, now) {
     var name = slot.name, late = Math.max(0, now - slot.from);
-    // Arrivée pendant l'animation du logo : on attend le créneau suivant sur l'écran d'accueil.
-    if (name === 'intro' && late > 700) name = 'home';
     if (name === 'home' && currentName === 'home') return;
     var holder = document.createElement('div');
     holder.innerHTML = screens[name]();
@@ -266,6 +281,20 @@
       setTimeout(function () { if (old.parentNode) old.parentNode.removeChild(old); }, 900);
     }
     document.body.classList.toggle('orange', name === 'intro');
+    introVideo = null;
+    if (name === 'intro') {
+      var v = el.querySelector('video');
+      introVideo = v; introFrom = slot.from;
+      v.addEventListener('loadedmetadata', syncIntro);
+      v.addEventListener('canplay', syncIntro);
+      // Vidéo illisible : retour au GIF animé.
+      v.addEventListener('error', function () {
+        var img = document.createElement('img');
+        img.src = 'boulanger-intro.gif?r=' + Date.now(); img.alt = 'Boulanger';
+        if (v.parentNode) v.parentNode.replaceChild(img, v);
+        introVideo = null;
+      });
+    }
     if (name === 'infinity') {
       // Défilement des mentions légales, recalé si le téléphone arrive en cours de créneau.
       var legal = el.querySelector('.legal'), box = el.querySelector('.legalbox');
@@ -280,10 +309,11 @@
 
   var shownKey = null;
   function tick() {
-    var now = Date.now(), slot = slotAt(now);
-    if (slot.key !== shownKey) { shownKey = slot.key; show(slot, now); }
+    var t = now(), slot = slotAt(t);
+    if (slot.key !== shownKey) { shownKey = slot.key; show(slot, t); }
+    syncIntro();
     // Prochain contrôle à la fin du créneau, et au moins chaque seconde (si l'heure du téléphone est corrigée).
-    setTimeout(tick, Math.max(40, Math.min(1000, slot.to - Date.now() + 15)));
+    setTimeout(tick, Math.max(40, Math.min(1000, slot.to - now() + 15)));
   }
   tick();
 

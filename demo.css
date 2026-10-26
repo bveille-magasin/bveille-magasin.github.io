@@ -163,5 +163,5 @@ sup { font-size: 10px; }
 /* Intro : animation officielle du logo Boulanger */
 .intro { padding: 0; justify-content: center; background: #F76B00; }
 .intro { overflow: hidden; align-items: center; }
-.intro img { width: 200%; max-width: none; display: block; flex-shrink: 0; }
+.intro img, .intro video { width: 200%; max-width: none; display: block; flex-shrink: 0; background: #F76B00; }
 body.orange { background: #F76B00; }
