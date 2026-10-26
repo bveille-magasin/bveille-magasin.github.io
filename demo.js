@@ -1,4 +1,5 @@
 /* Boucle de démo : construit les écrans à partir des caractéristiques détectées. */
+window.BVEILLE_DEMO_VERSION = '1.4.1';
 (function () {
   'use strict';
 

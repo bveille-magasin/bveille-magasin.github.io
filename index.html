@@ -11,7 +11,7 @@
 <meta name="theme-color" content="#F76B00">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="demo.css">
+<link rel="stylesheet" href="demo.css?v=1.4.1">
 <style>
   [hidden] { display: none !important; }
   /* Assistant de premier lancement (iPhone) */
@@ -83,7 +83,7 @@
     </label>
 
     <button class="go" id="go" type="button" disabled>Lancer la démo</button>
-    <p class="ver">B·Veille iPhone · version 1.4<br>Pour revenir à cet écran : appui long de 3 secondes dans le coin supérieur gauche de l'animation.</p>
+    <p class="ver">B·Veille iPhone · version 1.4.1<br>Pour revenir à cet écran : appui long de 3 secondes dans le coin supérieur gauche de l'animation.</p>
   </main>
 </div>
 
@@ -93,6 +93,7 @@
   <div class="box2">
     <b>Réglages de la démo</b>
     <span style="font-size:14px;color:#3F4250">Changer le modèle, la capacité ou l'écran Club Infinity de cet iPhone.</span>
+    <span id="loadedVersion" style="font-size:12px;color:#4A4D5C"></span>
     <button class="go" type="button" id="toSetup">Modifier les réglages</button>
     <button class="alt" type="button" id="cancelAdmin">Revenir à l'animation</button>
   </div>
@@ -231,7 +232,7 @@ var MODELS = {
     window.Demo = { specs: function () { return JSON.stringify(specs); }, clockOffset: function () { return clockOffset; } };
     measureClock();
 
-    ['legal.js', 'demo.js'].reduce(function (p, src) {
+    ['legal.js?v=1.4.1', 'demo.js?v=1.4.1'].reduce(function (p, src) {
       return p.then(function () {
         return new Promise(function (ok, ko) {
           var s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = ko; document.body.appendChild(s);
@@ -247,7 +248,10 @@ var MODELS = {
     // Appui long de 3 s dans le coin supérieur gauche : accès aux réglages.
     var corner = document.getElementById('corner'), admin = document.getElementById('admin'), t;
     corner.hidden = false;
-    corner.addEventListener('pointerdown', function (e) { e.stopPropagation(); t = setTimeout(function () { admin.hidden = false; }, 3000); });
+    corner.addEventListener('pointerdown', function (e) { e.stopPropagation(); t = setTimeout(function () {
+      var lv = window.BVEILLE_DEMO_VERSION || 'ancienne';
+      document.getElementById('loadedVersion').textContent = 'Page 1.4.1 · animation ' + lv + (lv === '1.4.1' ? ' ✓' : ' — fermez et rouvrez B·Veille');
+      admin.hidden = false; }, 3000); });
     ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) { corner.addEventListener(ev, function () { clearTimeout(t); }); });
     document.getElementById('toSetup').onclick = function () { admin.hidden = true; document.getElementById('stage').innerHTML = ''; location.hash = ''; showSetupFromDemo(); };
     document.getElementById('cancelAdmin').onclick = function () { admin.hidden = true; };

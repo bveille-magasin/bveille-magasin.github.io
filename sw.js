@@ -1,6 +1,6 @@
 /* B·Veille iPhone : garde une copie de la page pour fonctionner même si le Wi-Fi coupe.
    Changer VERSION à chaque mise à jour pour que les iPhone récupèrent la nouvelle version. */
-var VERSION = 'bveille-ios-1.4';
+var VERSION = 'bveille-ios-1.4.1';
 var FILES = [
   './',
   './boulanger-intro.gif',
@@ -41,7 +41,7 @@ self.addEventListener('fetch', function (e) {
   // Mesure de l'heure : toujours directement au serveur.
   if (new URL(e.request.url).searchParams.has('clock')) return;
   e.respondWith(
-    fetch(e.request).then(function (res) {
+    fetch(new URL(e.request.url).origin === location.origin ? new Request(e.request.url, { cache: 'no-cache', credentials: 'same-origin' }) : e.request).then(function (res) {
       if (res && res.ok && new URL(e.request.url).origin === location.origin) {
         var copy = res.clone();
         caches.open(VERSION).then(function (c) { c.put(e.request, copy); });
