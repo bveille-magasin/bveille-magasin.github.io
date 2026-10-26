@@ -199,8 +199,6 @@
     return picked.map(function (x) { return x[0]; });
   }
 
-  var order = ['intro', 'home'].concat(score());
-  if (specs.infinity) order.push('infinity');
 
   // ---------- Affichage et enchaînement ----------
   var stage = document.getElementById('stage');
@@ -221,41 +219,73 @@
 
   var EFFECTS = ['fx-slide', 'fx-zoom', 'fx-up', ''];
 
-  var idx = -1, current = null;
-  function next() {
-    idx = (idx + 1) % order.length;
+  // ---------- Synchronisation entre téléphones ----------
+  // Tous les téléphones (Android et iPhone) suivent la même horloge réseau : la boucle dure CYCLE_MS
+  // et redémarre à chaque multiple exact de CYCLE_MS. Aucun échange entre téléphones n'est nécessaire.
+  var INTRO_MS = 8200, HOME_MS = 6800, ATOUTS_MS = 28000, INF_MS = (LEGAL_SECONDS + 3) * 1000;
+  var CYCLE_MS = INTRO_MS + HOME_MS + ATOUTS_MS + INF_MS; // 70 secondes
+  var atouts = score();
+  if (!atouts.length) atouts = ['home'];
+
+  // Écran prévu à l'instant t, avec le début et la fin de son créneau.
+  function slotAt(t) {
+    var start = Math.floor(t / CYCLE_MS) * CYCLE_MS, a = start;
+    if (t < a + INTRO_MS) return { name: 'intro', key: start + ':intro', from: a, to: a + INTRO_MS };
+    a += INTRO_MS;
+    if (t < a + HOME_MS) return { name: 'home', key: start + ':home', from: a, to: a + HOME_MS };
+    a += HOME_MS;
+    if (t < a + ATOUTS_MS) {
+      // Les atouts se partagent le même temps total : chaque modèle arrive au Club Infinity en même temps.
+      var d = ATOUTS_MS / atouts.length, i = Math.min(atouts.length - 1, Math.floor((t - a) / d));
+      return { name: atouts[i], key: start + ':atout' + i, from: a + i * d, to: a + (i + 1) * d };
+    }
+    a += ATOUTS_MS;
+    return { name: specs.infinity ? 'infinity' : 'home', key: start + ':fin', from: a, to: a + INF_MS };
+  }
+
+  var current = null, currentName = null, count = 0;
+  function show(slot, now) {
+    var name = slot.name, late = Math.max(0, now - slot.from);
+    // Arrivée pendant l'animation du logo : on attend le créneau suivant sur l'écran d'accueil.
+    if (name === 'intro' && late > 700) name = 'home';
+    if (name === 'home' && currentName === 'home') return;
     var holder = document.createElement('div');
-    holder.innerHTML = screens[order[idx]]();
+    holder.innerHTML = screens[name]();
     var el = holder.firstChild;
-    var fx = order[idx] === 'intro' ? '' : EFFECTS[idx % EFFECTS.length];
+    var fx = name === 'intro' ? '' : EFFECTS[count++ % EFFECTS.length];
     if (fx) el.classList.add(fx);
     stage.appendChild(el);
     // Reflow puis fondu : relance aussi les animations à chaque passage.
     void el.offsetWidth;
     el.classList.add('on');
     var old = current;
-    current = el;
+    current = el; currentName = name;
     if (old) {
       old.classList.remove('on');
       old.classList.add('off');
       setTimeout(function () { if (old.parentNode) old.parentNode.removeChild(old); }, 900);
     }
-    var dur = SECONDS_PER_SCREEN;
-    document.body.classList.toggle('orange', order[idx] === 'intro');
-    if (order[idx] === 'intro') dur = INTRO_SECONDS;
-    if (order[idx] === 'infinity') {
-      // Laisse le temps de faire défiler les mentions légales en entier.
-      dur = LEGAL_SECONDS + 3;
+    document.body.classList.toggle('orange', name === 'intro');
+    if (name === 'infinity') {
+      // Défilement des mentions légales, recalé si le téléphone arrive en cours de créneau.
       var legal = el.querySelector('.legal'), box = el.querySelector('.legalbox');
       var dist = legal && box ? Math.max(0, legal.scrollHeight - box.clientHeight + 10) : 0;
       if (dist && legal.animate) {
-        legal.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-' + dist + 'px)' }],
+        var anim = legal.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-' + dist + 'px)' }],
           { duration: LEGAL_SECONDS * 1000, delay: 1500, fill: 'forwards', easing: 'linear' });
+        if (late > 0) anim.currentTime = late;
       }
     }
-    setTimeout(next, dur * 1000);
   }
-  next();
+
+  var shownKey = null;
+  function tick() {
+    var now = Date.now(), slot = slotAt(now);
+    if (slot.key !== shownKey) { shownKey = slot.key; show(slot, now); }
+    // Prochain contrôle à la fin du créneau, et au moins chaque seconde (si l'heure du téléphone est corrigée).
+    setTimeout(tick, Math.max(40, Math.min(1000, slot.to - Date.now() + 15)));
+  }
+  tick();
 
   // Premier toucher : on rend le téléphone au client.
   document.addEventListener('pointerdown', function () {
