@@ -194,7 +194,7 @@
     // Photo : seulement à partir de 48 Mpx (la lecture ne peut que sous-estimer, jamais gonfler la valeur).
     if (v.cameraMp >= 48) s.push(['photo', v.cameraMp >= 108 ? 3.2 : 2.2]);
     s.sort(function (a, b) { return b[1] - a[1]; });
-    var picked = s.filter(function (x) { return x[1] >= 1; }).slice(0, MAX_ATOUTS);
+    var picked = s.filter(function (x) { return x[1] >= 1; });
     if (picked.length < 2) picked = s.slice(0, 2);
     return picked.map(function (x) { return x[0]; });
   }
@@ -222,10 +222,13 @@
   // ---------- Synchronisation entre téléphones ----------
   // Tous les téléphones (Android et iPhone) suivent la même horloge réseau : la boucle dure CYCLE_MS
   // et redémarre à chaque multiple exact de CYCLE_MS. Aucun échange entre téléphones n'est nécessaire.
-  var INTRO_MS = 8200, HOME_MS = 6800, ATOUTS_MS = 28000, INF_MS = (LEGAL_SECONDS + 3) * 1000;
-  var CYCLE_MS = INTRO_MS + HOME_MS + ATOUTS_MS + INF_MS; // 70 secondes
+  // Les atouts passent dans le même ordre sur tous les téléphones, un créneau fixe chacun.
+  // Un téléphone sans argument fort sur un sujet garde l'écran précédent pendant ce créneau.
+  var ATOUT_ORDER = ['screen', 'storage', 'ram', 'cpu', 'photo'];
+  var ATOUT_MS = 7000;
+  var INTRO_MS = 8200, HOME_MS = 6800, ATOUTS_MS = ATOUT_ORDER.length * ATOUT_MS, INF_MS = (LEGAL_SECONDS + 3) * 1000;
+  var CYCLE_MS = INTRO_MS + HOME_MS + ATOUTS_MS + INF_MS; // 77 secondes
   var atouts = score();
-  if (!atouts.length) atouts = ['home'];
 
   // Écran prévu à l'instant t, avec le début et la fin de son créneau.
   function slotAt(t) {
@@ -235,9 +238,13 @@
     if (t < a + HOME_MS) return { name: 'home', key: start + ':home', from: a, to: a + HOME_MS };
     a += HOME_MS;
     if (t < a + ATOUTS_MS) {
-      // Les atouts se partagent le même temps total : chaque modèle arrive au Club Infinity en même temps.
-      var d = ATOUTS_MS / atouts.length, i = Math.min(atouts.length - 1, Math.floor((t - a) / d));
-      return { name: atouts[i], key: start + ':atout' + i, from: a + i * d, to: a + (i + 1) * d };
+      var i = Math.min(ATOUT_ORDER.length - 1, Math.floor((t - a) / ATOUT_MS));
+      // Dernier atout de ce téléphone dont le créneau est atteint ; sinon l'écran d'accueil reste affiché.
+      var name = 'home', from = start + INTRO_MS;
+      for (var j = 0; j <= i; j++) {
+        if (atouts.indexOf(ATOUT_ORDER[j]) >= 0) { name = ATOUT_ORDER[j]; from = a + j * ATOUT_MS; }
+      }
+      return { name: name, key: start + ':' + name, from: from, to: a + (i + 1) * ATOUT_MS };
     }
     a += ATOUTS_MS;
     return { name: specs.infinity ? 'infinity' : 'home', key: start + ':fin', from: a, to: a + INF_MS };
