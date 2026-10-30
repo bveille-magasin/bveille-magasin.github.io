@@ -1,5 +1,5 @@
 /* Boucle de démo : construit les écrans à partir des caractéristiques détectées. */
-window.BVEILLE_DEMO_VERSION = '1.4.1';
+window.BVEILLE_DEMO_VERSION = '1.5';
 (function () {
   'use strict';
 
@@ -315,9 +315,57 @@ window.BVEILLE_DEMO_VERSION = '1.4.1';
     }
   }
 
+  // ---------- Pause nuit (iPhone) ----------
+  // Écran entièrement noir : sur un écran OLED, les pixels noirs sont éteints et ne consomment presque rien.
+  // L'animation reprend toute seule à l'heure de reprise, synchronisée avec les autres téléphones.
+  function toMin(hhmm) { var p = String(hhmm || '').split(':'); return (+p[0]) * 60 + (+p[1] || 0); }
+  function isNight(t) {
+    if (!specs.nightFrom || !specs.nightTo) return false;
+    var d = new Date(t), m = d.getHours() * 60 + d.getMinutes();
+    var f = toMin(specs.nightFrom), to = toMin(specs.nightTo);
+    if (f === to) return false;
+    return f < to ? (m >= f && m < to) : (m >= f || m < to);
+  }
+  var nightEl = null, nightOn = false;
+  function enterNight() {
+    nightOn = true;
+    if (!nightEl) {
+      nightEl = document.createElement('div');
+      nightEl.style.cssText = 'position:fixed;inset:0;background:#000;z-index:6;';
+      var msg = document.createElement('div');
+      msg.style.cssText = 'position:absolute;font:500 12px Poppins,system-ui,sans-serif;color:#2a2a2a;white-space:nowrap;';
+      msg.textContent = 'Pause nuit · reprise à ' + specs.nightTo;
+      nightEl.appendChild(msg);
+      document.body.appendChild(nightEl);
+    }
+    nightEl.hidden = false;
+    stage.innerHTML = ''; stage.style.visibility = 'hidden';
+    current = null; currentName = null; introVideo = null; shownKey = null;
+    document.body.classList.remove('orange');
+    document.body.style.background = '#000';
+  }
+  function leaveNight() {
+    nightOn = false;
+    if (nightEl) nightEl.hidden = true;
+    stage.style.visibility = '';
+    document.body.style.background = '';
+  }
+
   var shownKey = null;
   function tick() {
-    var t = now(), slot = slotAt(t);
+    var t = now();
+    if (isNight(t)) {
+      if (!nightOn) enterNight();
+      // Le petit texte change de place à chaque contrôle, pour ne jamais marquer l'écran.
+      var msg = nightEl.firstChild;
+      msg.style.left = Math.round(10 + Math.random() * 60) + '%';
+      msg.style.top = Math.round(10 + Math.random() * 80) + '%';
+      msg.style.transform = 'translateX(-' + msg.style.left + ')';
+      setTimeout(tick, 20000);
+      return;
+    }
+    if (nightOn) leaveNight();
+    var slot = slotAt(t);
     if (slot.key !== shownKey) { shownKey = slot.key; show(slot, t); }
     syncIntro();
     // Prochain contrôle à la fin du créneau, et au moins chaque seconde (si l'heure du téléphone est corrigée).

@@ -1,6 +1,6 @@
 /* B·Veille iPhone : garde une copie de la page pour fonctionner même si le Wi-Fi coupe.
    Changer VERSION à chaque mise à jour pour que les iPhone récupèrent la nouvelle version. */
-var VERSION = 'bveille-ios-1.4.1';
+var VERSION = 'bveille-ios-1.5';
 var FILES = [
   './',
   './boulanger-intro.gif',

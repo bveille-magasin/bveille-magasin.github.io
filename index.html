@@ -11,7 +11,7 @@
 <meta name="theme-color" content="#F76B00">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="demo.css?v=1.4.1">
+<link rel="stylesheet" href="demo.css?v=1.5">
 <style>
   [hidden] { display: none !important; }
   /* Assistant de premier lancement (iPhone) */
@@ -36,6 +36,10 @@
   .toggle .txt { flex: 1; min-width: 0; }
   .toggle small { display: block; font-size: 12px; color: #4A4D5C; line-height: 1.35; margin-top: 2px; }
   .toggle input { width: 26px; height: 26px; accent-color: #F56A00; flex-shrink: 0; }
+  .times { display: flex; flex-wrap: wrap; gap: 10px; }
+  .times label { flex: 1 1 120px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; }
+  .times input { min-height: 44px; border: 2px solid #DCDBEF; border-radius: 12px; padding: 0 10px; font: 600 16px Poppins, -apple-system, sans-serif; color: #1B1D29; background: #fff; }
+  .card label.toggle { padding: 0; }
   .warn { background: #FFF1E6; border: 1px solid #F8C9A3; border-radius: 14px; padding: 12px 14px; font-size: 13px; line-height: 1.45; }
   .warn b { color: #8A3B00; }
   .go { min-height: 56px; border: none; border-radius: 28px; background: #F56A00; color: #fff; font: 700 19px "Work Sans", Poppins, sans-serif; }
@@ -82,8 +86,20 @@
       <input type="checkbox" id="inf">
     </label>
 
+    <section class="card">
+      <label class="toggle" for="nightOn" style="display:flex;align-items:center;gap:12px">
+        <span class="txt"><b style="font-size:15px">Pause nuit</b>
+          <small>Écran noir pour préserver la batterie. L'animation reprend toute seule le matin.</small></span>
+        <input type="checkbox" id="nightOn">
+      </label>
+      <div class="times">
+        <label for="nightFrom">Début de la pause<input type="time" id="nightFrom" value="20:00"></label>
+        <label for="nightTo">Reprise<input type="time" id="nightTo" value="09:00"></label>
+      </div>
+    </section>
+
     <button class="go" id="go" type="button" disabled>Lancer la démo</button>
-    <p class="ver">B·Veille iPhone · version 1.4.1<br>Pour revenir à cet écran : appui long de 3 secondes dans le coin supérieur gauche de l'animation.</p>
+    <p class="ver">B·Veille iPhone · version 1.5<br>Pour revenir à cet écran : appui long de 3 secondes dans le coin supérieur gauche de l'animation.</p>
   </main>
 </div>
 
@@ -176,8 +192,13 @@ var MODELS = {
     renderCaps(); update();
 
     document.getElementById('inf').onchange = function (e) { chosen.infinity = e.target.checked; };
+    var nOn = document.getElementById('nightOn'), nFrom = document.getElementById('nightFrom'), nTo = document.getElementById('nightTo');
+    nOn.checked = cfg && cfg.nightOn === false ? false : true;
+    nFrom.value = (cfg && cfg.nightFrom) || '20:00';
+    nTo.value = (cfg && cfg.nightTo) || '09:00';
     go.onclick = function () {
-      save({ model: chosen.model, cap: chosen.cap, infinity: chosen.infinity });
+      save({ model: chosen.model, cap: chosen.cap, infinity: chosen.infinity,
+        nightOn: nOn.checked, nightFrom: nFrom.value || '20:00', nightTo: nTo.value || '09:00' });
       location.reload();
     };
   }
@@ -227,12 +248,14 @@ var MODELS = {
       platform: 'ios', name: m.name, cpuName: m.cpuName, cpuSub: m.cpuSub, cores: m.cores, maxGhz: 0,
       ramGb: 0, storageGb: cfg.cap, sdMaxTb: 0, screenInch: m.screenInch, resW: m.resW, resH: m.resH, hz: m.hz,
       screenTech: m.screenTech, screenTitle: m.screenTitle, screenSub: m.screenSub,
-      cameraMp: m.cameraMp, photoPill: m.photoPill, batteryMah: 0, infinity: !!cfg.infinity
+      cameraMp: m.cameraMp, photoPill: m.photoPill, batteryMah: 0, infinity: !!cfg.infinity,
+      nightFrom: cfg.nightOn === false ? '' : (cfg.nightFrom || '20:00'),
+      nightTo: cfg.nightOn === false ? '' : (cfg.nightTo || '09:00')
     };
     window.Demo = { specs: function () { return JSON.stringify(specs); }, clockOffset: function () { return clockOffset; } };
     measureClock();
 
-    ['legal.js?v=1.4.1', 'demo.js?v=1.4.1'].reduce(function (p, src) {
+    ['legal.js?v=1.5', 'demo.js?v=1.5'].reduce(function (p, src) {
       return p.then(function () {
         return new Promise(function (ok, ko) {
           var s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = ko; document.body.appendChild(s);
@@ -250,7 +273,7 @@ var MODELS = {
     corner.hidden = false;
     corner.addEventListener('pointerdown', function (e) { e.stopPropagation(); t = setTimeout(function () {
       var lv = window.BVEILLE_DEMO_VERSION || 'ancienne';
-      document.getElementById('loadedVersion').textContent = 'Page 1.4.1 · animation ' + lv + (lv === '1.4.1' ? ' ✓' : ' — fermez et rouvrez B·Veille');
+      document.getElementById('loadedVersion').textContent = 'Page 1.5 · animation ' + lv + (lv === '1.5' ? ' ✓' : ' — fermez et rouvrez B·Veille');
       admin.hidden = false; }, 3000); });
     ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) { corner.addEventListener(ev, function () { clearTimeout(t); }); });
     document.getElementById('toSetup').onclick = function () { admin.hidden = true; document.getElementById('stage').innerHTML = ''; location.hash = ''; showSetupFromDemo(); };
