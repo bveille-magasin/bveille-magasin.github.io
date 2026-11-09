@@ -99,7 +99,7 @@
     </section>
 
     <button class="go" id="go" type="button" disabled>Lancer la démo</button>
-    <p class="ver">B·Veille iPhone · version 1.5<br>Pour revenir à cet écran : appui long de 3 secondes dans le coin supérieur gauche de l'animation.</p>
+    <p class="ver">B·Veille iPhone · version 1.5 (23 modèles)<br>Pour revenir à cet écran : appui long de 3 secondes dans le coin supérieur gauche de l'animation.</p>
   </main>
 </div>
 
@@ -118,33 +118,29 @@
 <script>
 /* Caractéristiques officielles Apple (fiches techniques support.apple.com). Uniquement des valeurs publiées par Apple. */
 var MODELS = {
-  'iphone-12': {
-    name: 'iPhone 12', caps: [64, 128, 256],
-    cpuName: 'Puce A14 Bionic', cores: 6,
-    screenInch: 6.1, resW: 1170, resH: 2532, hz: 60, screenTech: 'OLED Super Retina XDR',
-    screenSub: 'Des couleurs éclatantes et des noirs profonds.',
-    cameraMp: 12
-  },
-  'iphone-13': {
-    name: 'iPhone 13', caps: [128, 256, 512],
-    cpuName: 'Puce A15 Bionic', cores: 6,
-    screenInch: 6.1, resW: 1170, resH: 2532, hz: 60, screenTech: 'OLED Super Retina XDR',
-    screenSub: 'Des couleurs éclatantes et des noirs profonds.',
-    cameraMp: 12
-  },
-  'iphone-13-mini': {
-    name: 'iPhone 13 mini', caps: [128, 256, 512],
-    cpuName: 'Puce A15 Bionic', cores: 6,
-    screenInch: 5.4, resW: 1080, resH: 2340, hz: 60, screenTech: 'OLED Super Retina XDR',
-    screenTitle: 'Compact, il tient dans la main', screenSub: 'Un écran OLED dans un format de poche.',
-    cameraMp: 12
-  },
-  'iphone-16-pro-max': {
-    name: 'iPhone 16 Pro Max', caps: [256, 512, 1024],
-    cpuName: 'Puce A18 Pro', cores: 6, cpuSub: 'La puce la plus récente de cette sélection.',
-    screenInch: 6.9, resW: 1320, resH: 2868, hz: 120, screenTech: 'ProMotion',
-    cameraMp: 48, photoPill: 'Zoom optique 5x'
-  }
+  'iphone-se-3': { name: 'iPhone SE (3e gén.)', caps: [64, 128, 256], cpuName: 'Puce A15 Bionic', cores: 6, screenInch: 4.7, resW: 750, resH: 1334, hz: 60, screenTech: 'Retina HD', cameraMp: 12, screenTitle: 'Compact, il tient dans la main', screenSub: 'Un format de poche avec Touch ID.' },
+  'iphone-11': { name: 'iPhone 11', caps: [64, 128, 256], cpuName: 'Puce A13 Bionic', cores: 6, screenInch: 6.1, resW: 828, resH: 1792, hz: 60, screenTech: 'Liquid Retina', cameraMp: 12, screenSub: 'Confortable pour toute la journée.' },
+  'iphone-12-mini': { name: 'iPhone 12 mini', caps: [64, 128, 256], cpuName: 'Puce A14 Bionic', cores: 6, screenInch: 5.4, resW: 1080, resH: 2340, hz: 60, screenTech: 'OLED Super Retina XDR', cameraMp: 12, screenTitle: 'Compact, il tient dans la main', screenSub: 'Un écran OLED dans un format de poche.' },
+  'iphone-12': { name: 'iPhone 12', caps: [64, 128, 256], cpuName: 'Puce A14 Bionic', cores: 6, screenInch: 6.1, resW: 1170, resH: 2532, hz: 60, screenTech: 'OLED Super Retina XDR', cameraMp: 12, screenSub: 'Des couleurs éclatantes et des noirs profonds.' },
+  'iphone-12-pro': { name: 'iPhone 12 Pro', caps: [128, 256, 512], cpuName: 'Puce A14 Bionic', cores: 6, screenInch: 6.1, resW: 1170, resH: 2532, hz: 60, screenTech: 'OLED Super Retina XDR', cameraMp: 12, photoPill: 'Zoom optique 2x', screenSub: 'Des couleurs éclatantes et des noirs profonds.' },
+  'iphone-12-pro-max': { name: 'iPhone 12 Pro Max', caps: [128, 256, 512], cpuName: 'Puce A14 Bionic', cores: 6, screenInch: 6.7, resW: 1284, resH: 2778, hz: 60, screenTech: 'OLED Super Retina XDR', cameraMp: 12, photoPill: 'Zoom optique 2,5x', screenSub: 'Des couleurs éclatantes et des noirs profonds.' },
+  'iphone-13-mini': { name: 'iPhone 13 mini', caps: [128, 256, 512], cpuName: 'Puce A15 Bionic', cores: 6, screenInch: 5.4, resW: 1080, resH: 2340, hz: 60, screenTech: 'OLED Super Retina XDR', cameraMp: 12, screenTitle: 'Compact, il tient dans la main', screenSub: 'Un écran OLED dans un format de poche.' },
+  'iphone-13': { name: 'iPhone 13', caps: [128, 256, 512], cpuName: 'Puce A15 Bionic', cores: 6, screenInch: 6.1, resW: 1170, resH: 2532, hz: 60, screenTech: 'OLED Super Retina XDR', cameraMp: 12, screenSub: 'Des couleurs éclatantes et des noirs profonds.' },
+  'iphone-13-pro': { name: 'iPhone 13 Pro', caps: [128, 256, 512, 1024], cpuName: 'Puce A15 Bionic', cores: 6, screenInch: 6.1, resW: 1170, resH: 2532, hz: 120, screenTech: 'ProMotion', cameraMp: 12, photoPill: 'Zoom optique 3x' },
+  'iphone-13-pro-max': { name: 'iPhone 13 Pro Max', caps: [128, 256, 512, 1024], cpuName: 'Puce A15 Bionic', cores: 6, screenInch: 6.7, resW: 1284, resH: 2778, hz: 120, screenTech: 'ProMotion', cameraMp: 12, photoPill: 'Zoom optique 3x' },
+  'iphone-14': { name: 'iPhone 14', caps: [128, 256, 512], cpuName: 'Puce A15 Bionic', cores: 6, screenInch: 6.1, resW: 1170, resH: 2532, hz: 60, screenTech: 'OLED Super Retina XDR', cameraMp: 12, screenSub: 'Des couleurs éclatantes et des noirs profonds.' },
+  'iphone-14-plus': { name: 'iPhone 14 Plus', caps: [128, 256, 512], cpuName: 'Puce A15 Bionic', cores: 6, screenInch: 6.7, resW: 1284, resH: 2778, hz: 60, screenTech: 'OLED Super Retina XDR', cameraMp: 12, screenSub: 'Des couleurs éclatantes et des noirs profonds.' },
+  'iphone-14-pro': { name: 'iPhone 14 Pro', caps: [128, 256, 512, 1024], cpuName: 'Puce A16 Bionic', cores: 6, screenInch: 6.1, resW: 1179, resH: 2556, hz: 120, screenTech: 'ProMotion', cameraMp: 48, photoPill: 'Zoom optique 3x' },
+  'iphone-14-pro-max': { name: 'iPhone 14 Pro Max', caps: [128, 256, 512, 1024], cpuName: 'Puce A16 Bionic', cores: 6, screenInch: 6.7, resW: 1290, resH: 2796, hz: 120, screenTech: 'ProMotion', cameraMp: 48, photoPill: 'Zoom optique 3x' },
+  'iphone-15': { name: 'iPhone 15', caps: [128, 256, 512], cpuName: 'Puce A16 Bionic', cores: 6, screenInch: 6.1, resW: 1179, resH: 2556, hz: 60, screenTech: 'OLED Super Retina XDR', cameraMp: 48, photoPill: 'Téléobjectif 2x', screenSub: 'Des couleurs éclatantes et des noirs profonds.' },
+  'iphone-15-plus': { name: 'iPhone 15 Plus', caps: [128, 256, 512], cpuName: 'Puce A16 Bionic', cores: 6, screenInch: 6.7, resW: 1290, resH: 2796, hz: 60, screenTech: 'OLED Super Retina XDR', cameraMp: 48, photoPill: 'Téléobjectif 2x', screenSub: 'Des couleurs éclatantes et des noirs profonds.' },
+  'iphone-15-pro': { name: 'iPhone 15 Pro', caps: [128, 256, 512, 1024], cpuName: 'Puce A17 Pro', cores: 6, screenInch: 6.1, resW: 1179, resH: 2556, hz: 120, screenTech: 'ProMotion', cameraMp: 48, photoPill: 'Zoom optique 3x' },
+  'iphone-15-pro-max': { name: 'iPhone 15 Pro Max', caps: [256, 512, 1024], cpuName: 'Puce A17 Pro', cores: 6, screenInch: 6.7, resW: 1290, resH: 2796, hz: 120, screenTech: 'ProMotion', cameraMp: 48, photoPill: 'Zoom optique 5x' },
+  'iphone-16e': { name: 'iPhone 16e', caps: [128, 256, 512], cpuName: 'Puce A18', cores: 6, screenInch: 6.1, resW: 1170, resH: 2532, hz: 60, screenTech: 'OLED Super Retina XDR', cameraMp: 48, photoPill: 'Téléobjectif 2x', screenSub: 'Des couleurs éclatantes et des noirs profonds.' },
+  'iphone-16': { name: 'iPhone 16', caps: [128, 256, 512], cpuName: 'Puce A18', cores: 6, screenInch: 6.1, resW: 1179, resH: 2556, hz: 60, screenTech: 'OLED Super Retina XDR', cameraMp: 48, photoPill: 'Téléobjectif 2x', screenSub: 'Des couleurs éclatantes et des noirs profonds.' },
+  'iphone-16-plus': { name: 'iPhone 16 Plus', caps: [128, 256, 512], cpuName: 'Puce A18', cores: 6, screenInch: 6.7, resW: 1290, resH: 2796, hz: 60, screenTech: 'OLED Super Retina XDR', cameraMp: 48, photoPill: 'Téléobjectif 2x', screenSub: 'Des couleurs éclatantes et des noirs profonds.' },
+  'iphone-16-pro': { name: 'iPhone 16 Pro', caps: [128, 256, 512, 1024], cpuName: 'Puce A18 Pro', cores: 6, screenInch: 6.3, resW: 1206, resH: 2622, hz: 120, screenTech: 'ProMotion', cameraMp: 48, photoPill: 'Zoom optique 5x' },
+  'iphone-16-pro-max': { name: 'iPhone 16 Pro Max', caps: [256, 512, 1024], cpuName: 'Puce A18 Pro', cores: 6, screenInch: 6.9, resW: 1320, resH: 2868, hz: 120, screenTech: 'ProMotion', cameraMp: 48, photoPill: 'Zoom optique 5x', cpuSub: 'La puce la plus récente de cette sélection.' }
 };
 
 (function () {
